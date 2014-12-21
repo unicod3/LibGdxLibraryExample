@@ -177,7 +177,6 @@ public class Drop extends ApplicationAdapter {
     }
 
     public void draw() {
-
         // clear the screen with a dark blue color. The
         // arguments to glClearColor are the red, green
         // blue and alpha component in the range [0,1]
@@ -205,11 +204,10 @@ public class Drop extends ApplicationAdapter {
         for (Rectangle raindrop : raindrops) {
             batch.draw(dropImage, raindrop.x, raindrop.y);
         }
-
         batch.end();
         stage.draw();
-
     }
+
     public void update(){
         // process user input
         if(Gdx.input.isTouched()) {
