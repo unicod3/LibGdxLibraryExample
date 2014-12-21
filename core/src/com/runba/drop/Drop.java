@@ -8,19 +8,25 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.audio.*;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Input.*;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-import java.util.Iterator;
 
-import javax.xml.soap.Text;
+import java.util.Iterator;
 
 
 public class Drop extends ApplicationAdapter {
+    private Stage stage;
+    private TextButton buttonPause;
     private Texture dropImage;
     private Texture bucketImage;
     private Sound dropSound;
@@ -32,8 +38,15 @@ public class Drop extends ApplicationAdapter {
     private long lastDropTime;
     private int score;
     private String userScore;
+
+
     BitmapFont userBitmapFontName;
 
+    public enum State
+    {
+        PAUSE,
+        RESUME
+    }
     @Override
     public void create() {
 
@@ -41,6 +54,32 @@ public class Drop extends ApplicationAdapter {
         score = 0;
         userScore = "score: 0";
         userBitmapFontName = new BitmapFont();
+
+        stage = new Stage();
+        Gdx.input.setInputProcessor(stage);
+
+        //Pause Button
+        BitmapFont font = new BitmapFont();
+        font.setScale(3, 3);
+        Skin skin = new Skin();
+        TextureAtlas buttonAtlas = new TextureAtlas(Gdx.files.internal("buttons/buttons.txt"));
+        skin.addRegions(buttonAtlas);
+        TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.font = font;
+        textButtonStyle.up = skin.getDrawable("up-button");
+        textButtonStyle.down = skin.getDrawable("down-button");
+        buttonPause = new TextButton("PAUSE", textButtonStyle);
+        buttonPause.setPosition(20, Gdx.graphics.getHeight()-110);
+        stage.addActor(buttonPause);
+        buttonPause.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                State s = (getGameState() == State.PAUSE) ? State.RESUME : State.PAUSE;
+
+                buttonPause.setText(getGameState().toString());
+                setGameState(s);
+            }
+        });
 
         // load the images for the droplet and the bucket, 64x64 pixels each
         dropImage = new Texture(Gdx.files.internal("droplet.png"));
@@ -82,15 +121,63 @@ public class Drop extends ApplicationAdapter {
         lastDropTime = TimeUtils.nanoTime();
     }
 
+
+    private State state = State.RESUME;
     @Override
     public void render() {
+        switch (state)
+        {
+            case RESUME:
+                update();
+                break;
+            case PAUSE:
+                //do nothing
+                break;
+            default:
+                break;
+        }
+        draw();
+    }
+
+    @Override
+    public void dispose() {
+        // dispose of all the native resources
+        dropImage.dispose();
+        bucketImage.dispose();
+        dropSound.dispose();
+        rainMusic.dispose();
+        batch.dispose();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+    }
+
+    @Override
+    public void pause() {
+        this.state = State.PAUSE;
+    }
+
+    @Override
+    public void resume() {
+        this.state = State.RESUME;
+    }
+
+    public void setGameState(State s){
+        this.state = s;
+    }
+    public State getGameState(){
+       return this.state;
+    }
+
+    public void draw() {
+
         // clear the screen with a dark blue color. The
         // arguments to glClearColor are the red, green
         // blue and alpha component in the range [0,1]
         // of the color to be used to clear the screen.
         Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         // tell the camera to update its matrices.
         camera.update();
 
@@ -104,13 +191,15 @@ public class Drop extends ApplicationAdapter {
 
         userBitmapFontName.setColor(1.0f, 1.0f, 1.0f, 1.0f);
         userBitmapFontName.draw(batch, userScore, 25, 20);
-
         batch.draw(bucketImage, bucket.x, bucket.y);
-        for(Rectangle raindrop: raindrops) {
+        for (Rectangle raindrop : raindrops) {
             batch.draw(dropImage, raindrop.x, raindrop.y);
         }
         batch.end();
+        stage.draw();
 
+    }
+    public void update(){
         // process user input
         if(Gdx.input.isTouched()) {
             Vector3 touchPos = new Vector3();
@@ -142,36 +231,9 @@ public class Drop extends ApplicationAdapter {
                 continue;
             }
             dropSound.play();
-
             score += 5;
             userScore = "score: " + score;
-
             iter.remove();
-
-
         }
     }
-
-    @Override
-    public void dispose() {
-        // dispose of all the native resources
-        dropImage.dispose();
-        bucketImage.dispose();
-        dropSound.dispose();
-        rainMusic.dispose();
-        batch.dispose();
-    }
-
-    @Override
-    public void resize(int width, int height) {
-    }
-
-    @Override
-    public void pause() {
-    }
-
-    @Override
-    public void resume() {
-    }
-
 }
