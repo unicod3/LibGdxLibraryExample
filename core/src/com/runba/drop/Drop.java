@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.audio.*;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -38,7 +39,9 @@ public class Drop extends ApplicationAdapter {
     private long lastDropTime;
     private int score;
     private String userScore;
-
+    public static Texture backgroundTexture;
+    public static Sprite backgroundSprite;
+    private SpriteBatch spriteBatch;
 
     BitmapFont userBitmapFontName;
 
@@ -47,6 +50,9 @@ public class Drop extends ApplicationAdapter {
         PAUSE,
         RESUME
     }
+
+
+
     @Override
     public void create() {
 
@@ -57,7 +63,7 @@ public class Drop extends ApplicationAdapter {
 
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-
+        backgroundTexture = new Texture("background.png");
         //Pause Button
         BitmapFont font = new BitmapFont();
         font.setScale(3, 3);
@@ -115,8 +121,8 @@ public class Drop extends ApplicationAdapter {
         Rectangle raindrop = new Rectangle();
         raindrop.x = MathUtils.random(0, 800-64);
         raindrop.y = 480;
-        raindrop.width = 64;
-        raindrop.height = 64;
+        raindrop.width = 40;
+        raindrop.height = 59;
         raindrops.add(raindrop);
         lastDropTime = TimeUtils.nanoTime();
     }
@@ -189,12 +195,17 @@ public class Drop extends ApplicationAdapter {
         // all drops
         batch.begin();
 
+        batch.disableBlending();
+        batch.draw(backgroundTexture,0,0,800,480);
+        batch.enableBlending();
+
         userBitmapFontName.setColor(1.0f, 1.0f, 1.0f, 1.0f);
         userBitmapFontName.draw(batch, userScore, 25, 20);
         batch.draw(bucketImage, bucket.x, bucket.y);
         for (Rectangle raindrop : raindrops) {
             batch.draw(dropImage, raindrop.x, raindrop.y);
         }
+
         batch.end();
         stage.draw();
 
